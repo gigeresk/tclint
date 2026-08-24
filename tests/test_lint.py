@@ -197,3 +197,38 @@ def test_puts_no_args_message():
     assert len(violations) == 1
     assert violations[0].id == Rule("command-args")
     assert violations[0].message == "missing required argument for puts: string"
+
+
+def test_unknown_command_off_by_default():
+    script = "get_keepers foo"
+    violations = lint(script, Config(), Path())
+    assert not any(v.id == Rule.UNKNOWN_COMMAND for v in violations)
+
+
+def test_unknown_command():
+    script = "get_keepers foo"
+    violations = lint(script, Config(unknown_command=True), Path())
+    assert len(violations) == 1
+    assert violations[0].id == Rule.UNKNOWN_COMMAND
+    assert violations[0].message == "unknown command 'get_keepers'"
+    assert violations[0].start == (1, 1)
+
+
+def test_unknown_command_skips_same_file_proc():
+    script = "proc foo {} {}\nfoo"
+    violations = lint(script, Config(unknown_command=True), Path())
+    assert not any(v.id == Rule.UNKNOWN_COMMAND for v in violations)
+
+
+def test_unknown_command_skips_dynamic_name():
+    script = "$cmd args"
+    violations = lint(script, Config(unknown_command=True), Path())
+    assert not any(v.id == Rule.UNKNOWN_COMMAND for v in violations)
+
+
+def test_unknown_command_suggestion():
+    script = "putss hello"
+    violations = lint(script, Config(unknown_command=True), Path())
+    assert len(violations) == 1
+    assert violations[0].id == Rule.UNKNOWN_COMMAND
+    assert "did you mean puts" in violations[0].message

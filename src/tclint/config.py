@@ -56,6 +56,7 @@ class Config:
         default=SpacesInBraces.NEVER
     )
     style_emacs: bool = dataclasses.field(default=False)
+    unknown_command: bool = dataclasses.field(default=False)
 
     def apply_cli_args(self, args):
         args_dict = vars(args)
@@ -280,6 +281,7 @@ def _validate_config(config: dict, root: pathlib.Path):
         Optional("extensions"): _validate_extensions,
         Optional("ignore"): _validate_ignore,
         Optional("commands"): _validate_commands(root),
+        Optional("unknown-command"): bool,
         Optional("style"): {
             Optional("indent"): _validate_style_indent,
             Optional("line-length"): _validate_style_line_length,
@@ -384,6 +386,13 @@ def setup_config_cli_args(parser, cwd: pathlib.Path):
         metavar='"rule1, rule2, ..."',
     )
     setup_common_config_cli_args(config_group, cwd)
+    _add_bool(
+        config_group,
+        parser,
+        "unknown_command",
+        "--unknown-command",
+        "--no-unknown-command",
+    )
     config_group.add_argument(
         "--style-line-length",
         type=_argparsify(_validate_style_line_length),

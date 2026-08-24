@@ -16,6 +16,7 @@ class Rule(Enum):
     UNBRACED_EXPR = "unbraced-expr"
     REDUNDANT_EXPR = "redundant-expr"
     UNOPENED_QUOTE = "unopened-quote"
+    UNKNOWN_COMMAND = "unknown-command"
 
     def __str__(self):
         return self.value

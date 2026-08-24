@@ -9,6 +9,7 @@ This page lists all lint violations that may be reported by `tclint`.
 - [`unbraced-expr`](#unbraced-expr)
 - [`redundant-expr`](#redundant-expr)
 - [`unopened-quote`](#unopened-quote)
+- [`unknown-command`](#unknown-command)
 
 ## `line-length`
 
@@ -119,3 +120,18 @@ following bugs:
 In Tcl, `"` is only recognized as a quoting delimiter at the start of a word. When it
 appears mid-word, it is silently treated as a literal character, which is rarely the
 author's intent and can result in unexpected behavior.
+
+## `unknown-command`
+
+Commands must be builtins, plugin-defined, or `proc`s defined in the same file.
+Disabled by default; enable with `unknown-command = true` (or `--unknown-command`).
+
+Dynamic command names (e.g. `$cmd`) and procs defined later in the same file are not
+flagged. Procs sourced from other files are not visible and may be reported.
+
+### Rationale
+
+An unknown name is often a typo (`putss` instead of `puts`). The check is off by
+default because false positives are common: many Tcl engines are non-standard and
+add their own commands, and user-defined `proc`s may live outside the current file.
+Without a complete command plugin, those would be reported as errors.

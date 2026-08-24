@@ -16,6 +16,9 @@ ignore = ["unbraced-expr"]
 extensions = ["tcl"]
 # path(s) to command specs defining tool-specific commands and arguments.
 commands = ["~/.tclint/openroad.json"]
+# report commands that aren't builtins, plugins, or procs defined in this file.
+# defaults to false.
+unknown-command = false
 
 # with the exception of line-length, the [style] settings affect tclfmt rather than tclint.
 
@@ -75,6 +78,7 @@ configuration arguments:
   --extend-exclude "pattern1, pattern2, ..."
   --extensions "tcl, xdc, ..."
   --commands <path>
+  --unknown-command / --no-unknown-command
   --style-line-length <line_length>
 ```
 

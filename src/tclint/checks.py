@@ -1,7 +1,9 @@
 import re
 
+from tclint.commands.checks import _did_you_mean_suffix
 from tclint.commands.plugins import PluginManager
 from tclint.config import Config
+from tclint.symbol_table import SymbolTableBuilder
 from tclint.syntax_tree import (
     BracedExpression,
     BracedWord,
@@ -115,6 +117,45 @@ class RedefinedBuiltinChecker(Visitor):
                     command.args[1].end_pos,
                 )
             )
+
+
+class UnknownCommandChecker(Visitor):
+    """Reports commands that aren't builtins, plugins, or procs in this file.
+
+    Off by default; enable with `unknown-command = true`.
+    """
+
+    def __init__(self, plugin_manager: PluginManager):
+        self._plugin_manager = plugin_manager
+
+    def check(self, _, tree: Script, config: Config) -> list[Violation]:
+        if not config.unknown_command:
+            return []
+
+        self._violations: list[Violation] = []
+        commands = self._plugin_manager.get_commands(config.commands)
+        self._commands = set(commands.keys())
+        self._procs = set(SymbolTableBuilder().build(tree).proc_def)
+        self._candidates = self._commands | self._procs
+
+        tree.accept(self, recurse=True)
+
+        return self._violations
+
+    def visit_command(self, command):
+        name = command.routine.contents
+        if name is None or name in self._commands or name in self._procs:
+            return
+
+        suggestion = _did_you_mean_suffix(name, self._candidates)
+        self._violations.append(
+            Violation(
+                Rule.UNKNOWN_COMMAND,
+                f"unknown command '{name}'{suggestion}",
+                command.pos,
+                command.routine.end_pos,
+            )
+        )
 
 
 class UnbracedExprChecker(Visitor):
@@ -242,6 +283,7 @@ class UnopenedQuoteChecker(Visitor):
 def get_checkers(plugin_manager: PluginManager):
     checkers = (
         RedefinedBuiltinChecker(plugin_manager),
+        UnknownCommandChecker(plugin_manager),
         UnbracedExprChecker(),
         RedundantExprChecker(),
         UnopenedQuoteChecker(),

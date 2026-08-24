@@ -76,6 +76,7 @@ def test_tclint_config_args():
         "commands.json",
         "--style-line-length",
         "79",
+        "--unknown-command",
     ]
 
     args = parser.parse_args(args)
@@ -91,6 +92,7 @@ def test_tclint_config_args():
     assert len(args.commands) == 1
     assert str(args.commands[0]).endswith("commands.json")
     assert args.style_line_length == 79
+    assert args.unknown_command is True
 
 
 def test_tclfmt_config_args():
